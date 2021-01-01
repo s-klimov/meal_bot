@@ -25,4 +25,6 @@
 #### Как управлять подключением к серверву из консоли/терминала
 1. скачать у поставщика услуги виртуального сервера pem-файл
 1. выполнить над pem-файлом команду $ `chmod 400 mykey.pem` [400 protects it by making it read only and only for the owner](https://stackoverflow.com/questions/8193768/trying-to-ssh-into-an-amazon-ec2-instance-permission-error)
-1. $ `ssh -i /home/klimov/PycharmProjects/amazon_server/amazonserver.pem ubuntu@18.222.18.171`
+1. Подключение к серверу  $ `ssh -i /home/klimov/PycharmProjects/amazon_server/amazonserver.pem ubuntu@18.222.18.171`
+1. Копирование файлов с компьютера на сервера  $ `scp -i /home/klimov/PycharmProjects/amazon_server/amazonserver.pem -r /home/klimov/PycharmProjects/k-bot-2 ubuntu@18.222.18.171:/home/ubuntu
+`

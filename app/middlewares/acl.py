@@ -16,7 +16,7 @@ class ACLMiddleware(BaseMiddleware):
 
         user = await User.get(user_id)
         if user is None:
-            user = await User.create(id=user_id, is_superuser=is_superuser)
+            user = await User.create(id=user_id)
 
         chat = await Chat.get(chat_id)
         if chat is None:
