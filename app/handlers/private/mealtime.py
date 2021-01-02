@@ -6,10 +6,9 @@ from aiogram.dispatcher.filters.builtin import Command, Text
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.markdown import hcode
 
-from app.keyboards import statistic_keyboard, confirm_keyboard, statistic_actions
+from app.keyboards import menu_keyboard, confirm_keyboard, menu_item
 from app.loader import dp
 from app.models import Mealtime
-from app.states import Warning
 
 
 # TODO выводить количество приемов пищи за день
@@ -18,10 +17,10 @@ async def command_statistic_handler(message: types.Message):
     items = await Mealtime.query.where(Mealtime.user_id == message.from_user.id).gino.all()
 
     await message.answer("\n".join([str(item.created_at.date()) for item in items]),
-                         reply_markup=statistic_keyboard)
+                         reply_markup=menu_keyboard)
 
 
-@dp.message_handler(Text(equals=[statistic_actions["del_all"], statistic_actions["del_day"]]))
+@dp.message_handler(Text(equals=[menu_item["del_all"], menu_item["del_day"]]))
 async def get_food(message: types.Message, state: FSMContext):
     await message.answer(f"Ты хочешь {message.text}", reply_markup=ReplyKeyboardRemove())
     await message.answer(f"Точно выполняем?", reply_markup=confirm_keyboard)
@@ -41,15 +40,21 @@ async def cancel_handler(call: CallbackQuery, state: FSMContext):
     await state.finish()
 
 
-# TODO попробовать использовать фильтр на текст "+"
-@dp.message_handler()
-async def command_meal_handler(message: types.Message):
-    if message.text == '+':
-        await Mealtime.create(user_id=message.from_user.id)
+@dp.message_handler(Text(equals=[menu_item["add_event"]]))
+async def add_mealtime_event(message: types.Message):
+    await Mealtime.create(user_id=message.from_user.id)
 
-        # TODO выводить количество записей по условию согласно рекомендаций SQLAlchemy
-        count = await Mealtime.query.where(Mealtime.created_at >= datetime.now().date()).gino.all()
-        count = len(count)
-        await message.answer('Количество приемов пищи за сегодня - ' + hcode(count))
-    else:
-        await message.answer(f'Я тебя не понимаю. Введи {hcode("+")}, либо занимайся своими делами)')
+    # TODO выводить количество записей по условию согласно рекомендаций SQLAlchemy
+    count = await Mealtime.query.where(Mealtime.created_at >= datetime.now().date()).gino.all()
+    count = len(count)
+    await message.answer('Количество приемов пищи за сегодня - ' + hcode(count))
+
+
+@dp.message_handler(Text(equals=[menu_item["del_event"]]))
+async def del_mealtime_event(message: types.Message):
+
+    # TODO реализовать удаление послденей записи за сегодня!
+    await message.answer("Этого я ещё не умею")
+
+    # else:
+    #     await message.answer(f'Я тебя не понимаю. Введи {hcode("+")}, либо занимайся своими делами)')

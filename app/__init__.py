@@ -1,6 +1,5 @@
 __author__ = """
-    KeyCreator
-    https://github.com/users/KeyCreator/
+    {{ cookiecutter.full_name }}
+    https://github.com/{{cookiecutter.github_username}}/
 """
-__email__ = 's.klimov@bk.ru'
-__version__ = '1.0'
+__version__ = '{{ cookiecutter.version }}'

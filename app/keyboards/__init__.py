@@ -1,7 +1,7 @@
 from loguru import logger
 
-from app.keyboards.reply.statistic import statistic_keyboard
-from app.keyboards.reply.callback_data import statistic_actions
+from app.keyboards.reply.main_menu import menu_keyboard
+from app.keyboards.reply.menu_items import menu_item
 from .inline.confirm import confirm_keyboard
 
 logger.info("Keyboards are successfully configured")

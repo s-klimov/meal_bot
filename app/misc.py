@@ -1,6 +1,10 @@
 from aiogram import Bot, Dispatcher, types
-# from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
+{%- if cookiecutter.use_redis == "y" %}
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
+{%- else %}
+from aiogram.contrib.fsm_storage.files import JSONStorage
+{%- endif %}
 
 from gino import Gino
 
@@ -12,10 +16,14 @@ bot = Bot(
     token=config.BOT_TOKEN,
     parse_mode=types.ParseMode.HTML,
 )
-
-# TODO заменить MemoryStorage на Redis (во всех модулях)
-storage = RedisStorage2()
-
+{% if cookiecutter.use_redis == "y" %}
+storage = RedisStorage2(
+    host=config.REDIS_HOST,
+    port=config.REDIS_PORT,
+)
+{% else %}
+storage = JSONStorage(config.WORK_PATH.joinpath('app', 'storage.json'))
+{% endif %}
 dp = Dispatcher(
     bot=bot,
     storage=storage,
