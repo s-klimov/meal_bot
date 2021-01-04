@@ -1,60 +1,53 @@
-from datetime import datetime
-
+from datetime import date, datetime
+from sqlalchemy import func, and_, desc
 from aiogram import types
-from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.builtin import Command, Text
-from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from aiogram.utils.markdown import hcode
 
-from app.keyboards import menu_keyboard, confirm_keyboard, menu_item
-from app.loader import dp
+from app.loader import dp, db
 from app.models import Mealtime
 
 
-# TODO выводить количество приемов пищи за день
+# TODO выводить количество приемов пищи за последние пять дней в порядке убывания дат, текущую дату показывать детально
 @dp.message_handler(Command("statistic", prefixes="!/"))
 async def command_statistic_handler(message: types.Message):
-    items = await Mealtime.query.where(Mealtime.user_id == message.from_user.id).gino.all()
+    items = await(db.select([Mealtime.meal_date, db.func.count(Mealtime.meal_date)])
+                   .select_from(Mealtime)
+                   .where(Mealtime.user_id == message.from_user.id)
+                   .group_by(Mealtime.meal_date)
+                   .order_by(desc(Mealtime.meal_date))  # сортируем по убыванию дат от текущей
+                   .limit(5)    # Получаем первые 5 записей
+                   .gino
+                   .all())
 
-    await message.answer("\n".join([str(item.created_at.date()) for item in items]),
-                         reply_markup=menu_keyboard)
+    today_items = await(Mealtime.query
+                        .where(and_(Mealtime.created_at >= datetime.now().date(),
+                                    Mealtime.user_id == message.from_user.id))
+                        .gino
+                        .all())
 
-
-@dp.message_handler(Text(equals=[menu_item["del_all"], menu_item["del_day"]]))
-async def get_food(message: types.Message, state: FSMContext):
-    await message.answer(f"Ты хочешь {message.text}", reply_markup=ReplyKeyboardRemove())
-    await message.answer(f"Точно выполняем?", reply_markup=confirm_keyboard)
-    await state.set_state("delete_statistic")
-
-
-# TODO реализовать двойное подтверждение удаления статистики
-@dp.callback_query_handler(text="cancel", state="delete_statistic")
-async def cancel_handler(call: CallbackQuery, state: FSMContext):
-    await call.message.edit_text("ты отменил действие", reply_markup=None)
-    await state.finish()
-
-
-@dp.callback_query_handler(text="confirm", state="delete_statistic")
-async def cancel_handler(call: CallbackQuery, state: FSMContext):
-    await call.message.edit_text("ты подтвердил действие", reply_markup=None)
-    await state.finish()
+    for item in items:
+        await message.answer(f"{str(item)}\n")
+        print(item[0], date.today())
+        if item[0] == date.today():
+            await message.answer("\n".join([str(foo.created_at) for foo in today_items]))
 
 
-@dp.message_handler(Text(equals=[menu_item["add_event"]]))
+@dp.message_handler(Command("add", prefixes="!/"))
 async def add_mealtime_event(message: types.Message):
     await Mealtime.create(user_id=message.from_user.id)
 
-    # TODO выводить количество записей по условию согласно рекомендаций SQLAlchemy
-    count = await Mealtime.query.where(Mealtime.created_at >= datetime.now().date()).gino.all()
-    count = len(count)
-    await message.answer('Количество приемов пищи за сегодня - ' + hcode(count))
+    total = await(db.select([db.func.count()])
+                  .where(and_(Mealtime.created_at >= datetime.now().date(),
+                              Mealtime.user_id == message.from_user.id))
+                  .gino
+                  .scalar())
+
+    await message.answer('Прием пищи зафиксирован. Количество приемов пищи за сегодня - ' + hcode(total))
 
 
-@dp.message_handler(Text(equals=[menu_item["del_event"]]))
+@dp.message_handler(Command("remove", prefixes="!/"))
 async def del_mealtime_event(message: types.Message):
 
     # TODO реализовать удаление послденей записи за сегодня!
-    await message.answer("Этого я ещё не умею")
-
-    # else:
-    #     await message.answer(f'Я тебя не понимаю. Введи {hcode("+")}, либо занимайся своими делами)')
+    await message.answer("Удалять последнюю запись я ещё не умею")
