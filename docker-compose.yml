@@ -2,39 +2,49 @@ version: '3.1'
 
 services:
 # Если хотите подключить базу данных
-  db:
+#  db:
 # ВНИМАТЕЛЬНО! ВОТ ЭТО НАЗВАНИЕ СЕРВИСА - db - ДОЛЖНО БЫТЬ УКАЗАНО В БОТЕ КАК host В ПОДКЛЮЧЕНИИ К БАЗЕ ИЗ БОТА
 # ТО ЕСТЬ НЕ АЙПИШНИК И НЕ ЛОКАЛХОСТ, А db
-    container_name: database
-    image: sameersbn/postgresql:10-2
-    environment:
-      PG_PASSWORD: $PGPASSWORD
-    restart: always
+#    container_name: database
+#    image: sameersbn/postgresql:10-2
+#    environment:
+#      PG_PASSWORD: $PGPASSWORD
+#    restart: always
+#    ports:
+#      - 5432:5432
+#    networks:
+#      - botnet
+#    volumes:
+#      - ./postgres:/var/lib/postgresql
+
+  redis:    
+    container_name: redis
+    image: redis
+    restart: always   
     ports:
-      - 5432:5432
-    networks:
-      - botnet
-    volumes:
-      - ./postgres:/var/lib/postgresql
+      - 6379:6379
+
 
   tgbot:
-    container_name: bot
+    container_name: meal_bot
     build:
       context: .
-    command: python -m app.py
-    networks:
-      - botnet
+    command: python -m app
+    network_mode: host
+#    networks:
+#      - botnet
     restart: always
     env_file:
       - ".env"
-    volumes:
-      - .:/src
+#    volumes:
+#      - .:/src
     # Бот стартует после запуска базы
     depends_on:
-      - db
+#      - db
+      - redis
 
 # указываются используемые сети
-networks:
-  botnet:
+# networks:
+#  botnet:
     # указывается драйвер сети
-    driver: bridge
+#    driver: bridge
