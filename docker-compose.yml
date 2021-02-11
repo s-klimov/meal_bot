@@ -1,21 +1,6 @@
 version: '3.1'
 
 services:
-# Если хотите подключить базу данных
-#  db:
-# ВНИМАТЕЛЬНО! ВОТ ЭТО НАЗВАНИЕ СЕРВИСА - db - ДОЛЖНО БЫТЬ УКАЗАНО В БОТЕ КАК host В ПОДКЛЮЧЕНИИ К БАЗЕ ИЗ БОТА
-# ТО ЕСТЬ НЕ АЙПИШНИК И НЕ ЛОКАЛХОСТ, А db
-#    container_name: database
-#    image: sameersbn/postgresql:10-2
-#    environment:
-#      PG_PASSWORD: $PGPASSWORD
-#    restart: always
-#    ports:
-#      - 5432:5432
-#    networks:
-#      - botnet
-#    volumes:
-#      - ./postgres:/var/lib/postgresql
 
   redis:    
     container_name: redis
@@ -31,20 +16,8 @@ services:
       context: .
     command: python -m app
     network_mode: host
-#    networks:
-#      - botnet
     restart: always
     env_file:
       - ".env"
-#    volumes:
-#      - .:/src
-    # Бот стартует после запуска базы
     depends_on:
-#      - db
       - redis
-
-# указываются используемые сети
-# networks:
-#  botnet:
-    # указывается драйвер сети
-#    driver: bridge
